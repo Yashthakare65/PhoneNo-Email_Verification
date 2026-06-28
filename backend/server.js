@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
+const twilio = require('twilio');
 
 const app = express();
 app.use(cors());
@@ -18,6 +19,8 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 });
+
+const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'Backend is running!' });
@@ -49,7 +52,17 @@ app.post('/api/send-otp', async (req, res) => {
       return res.status(500).json({ success: false, message: 'Failed to send email' });
     }
   } else {
-    console.log(`OTP for ${identifier}: ${code}`); // phone — still a stand-in until Twilio is added
+    const toNumber = identifier.startsWith('+') ? identifier : `+91${identifier}`;
+    try {
+      await twilioClient.messages.create({
+        body: `Your verification code is ${code}. It expires in 5 minutes.`,
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to: toNumber,
+      });
+    } catch (err) {
+      console.error('SMS send failed:', err.message);
+      return res.status(500).json({ success: false, message: 'Failed to send SMS' });
+    }
   }
 
   res.json({ success: true, message: 'OTP sent' });
