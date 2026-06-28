@@ -1,16 +1,20 @@
 import { useState } from 'react';
 import OtpInput from './OtpInput';
 
-export default function OtpStep({ destination, demoCode, onVerified }) {
+export default function OtpStep({ destination, onVerify, onVerified }) {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleVerify = () => {
-    if (code === demoCode) {
-      setError('');
+  const handleVerify = async () => {
+    setLoading(true);
+    setError('');
+    const result = await onVerify(code);
+    setLoading(false);
+    if (result.success) {
       onVerified();
     } else {
-      setError("That code didn't match — try again.");
+      setError(result.message || 'Verification failed');
     }
   };
 
@@ -23,15 +27,12 @@ export default function OtpStep({ destination, demoCode, onVerified }) {
 
       {error && <p className="text-sm text-red-500 text-center mt-3">{error}</p>}
 
-      <p className="text-xs text-slate-400 text-center mt-4 bg-slate-50 rounded-md py-2">
-        Demo code: <span className="font-mono font-semibold">{demoCode}</span>
-      </p>
-
       <button
         onClick={handleVerify}
-        className="w-full bg-indigo-600 text-white font-medium rounded-lg py-3 mt-5"
+        disabled={code.length !== 6 || loading}
+        className="w-full bg-indigo-600 disabled:bg-slate-200 disabled:text-slate-400 text-white font-medium rounded-lg py-3 mt-5"
       >
-        Verify
+        {loading ? 'Verifying...' : 'Verify'}
       </button>
     </div>
   );
