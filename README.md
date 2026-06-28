@@ -76,8 +76,8 @@ otp-verification-project/
 ### 1. Clone the repository
 
 ```bash
-git clone <your-repo-url>
-cd otp-verification-project
+git clone https://github.com/Yashthakare65/PhoneNo-Email_Verification.git
+cd PhoneNo-Email_Verification
 ```
 
 ### 2. Backend setup
